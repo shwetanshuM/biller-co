@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Biller</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --border: #2a2a2a;
+      --accent: #00e5a0;
+      --accent-dim: #00e5a015;
+      --text: #f0f0f0;
+      --muted: #666;
+      --danger: #ff4d4d;
+      --font: 'Inter', system-ui, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      min-height: 100vh;
+    }
+
+
+    #auth-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .auth-box {
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .auth-box h1 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+
+    .auth-box h1 span { color: var(--accent); }
+
+    .auth-box p {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 32px;
+    }
+
+    .tab-row {
+      display: flex;
+      gap: 4px;
+      background: var(--surface);
+      padding: 4px;
+      border-radius: 10px;
+      margin-bottom: 24px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 8px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background: var(--accent);
+      color: #000;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    .form-group input:focus { border-color: var(--accent); }
+
+    .btn {
+      width: 100%;
+      padding: 13px;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: opacity 0.2s;
+    }
+
+    .btn:hover { opacity: 0.85; }
+
+    .error-msg {
+      color: var(--danger);
+      font-size: 13px;
+      margin-top: 10px;
+      text-align: center;
+    }
+
+
+    #app-screen { display: none; }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      z-index: 10;
+    }
+
+    .topbar-left { font-weight: 700; font-size: 18px; }
+    .topbar-left span { color: var(--accent); }
+
+    .logout-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 7px 14px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .logout-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+    .nav {
+      display: flex;
+      gap: 4px;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+    }
+
+    .nav-btn {
+      padding: 8px 16px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 13px;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .nav-btn.active {
+      background: var(--accent-dim);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .main { padding: 24px; max-width: 900px; }
+
+    .section { display: none; }
+    .section.active { display: block; }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      letter-spacing: -0.3px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 16px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .form-row.single { grid-template-columns: 1fr; }
+
+    .inline-btn {
+      padding: 12px 20px;
+      background: var(--accent);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      margin-top: 4px;
+    }
+
+    .inline-btn:hover { opacity: 0.85; }
+
+    .success-msg {
+      color: var(--accent);
+      font-size: 13px;
+      margin-top: 10px;
+    }
+
+
+    .members-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .members-table th {
+      text-align: left;
+      padding: 10px 12px;
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .members-table td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .members-table tr:last-child td { border-bottom: none; }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .payment-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .payment-item:last-child { border-bottom: none; }
+
+    .payment-name { font-weight: 500; font-size: 14px; }
+    .payment-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .payment-amount { font-weight: 700; font-size: 16px; color: var(--accent); }
+
+    .mode-tag {
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: var(--border);
+      color: var(--muted);
+      margin-left: 6px;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: var(--muted);
+      padding: 40px 0;
+      font-size: 14px;
+    }
+
+    select {
+      width: 100%;
+      padding: 12px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+    }
+
+    select:focus { border-color: var(--accent); }
+  </style>
+</head>
+<body>
+
+
+<div id="auth-screen">
+  <div class="auth-box">
+    <h1>bill<span>er</span></h1>
+    <p>manage your business by chatting</p>
+
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="switchTab('signin')">Sign In</button>
+      <button class="tab-btn" onclick="switchTab('signup')">Sign Up</button>
+    </div>
+
+    <!-- SIGNIN -->
+    <div id="signin-form">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="signin-email" placeholder="owner@gym.com" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="signin-password" placeholder="••••••••" />
+      </div>
+      <button class="btn" onclick="handleSignin()">Sign In</button>
+      <p class="error-msg" id="signin-error"></p>
+    </div>
+
+    <!-- SIGNUP -->
+    <div id="signup-form" style="display:none">
+      <div class="form-group">
+        <label>Business Name</label>
+        <input type="text" id="signup-bname" placeholder="FitZone Gym" />
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="signup-email" placeholder="owner@gym.com" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="signup-password" placeholder="••••••••" />
+      </div>
+      <button class="btn" onclick="handleSignup()">Create Account</button>
+      <p class="error-msg" id="signup-error"></p>
+    </div>
+  </div>
+</div>
+
+
+<div id="app-screen">
+  <div class="topbar">
+    <div class="topbar-left">bill<span>er</span></div>
+    <button class="logout-btn" onclick="handleLogout()">logout</button>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn active" onclick="switchSection('members-list')">all members</button>
+    <button class="nav-btn" onclick="switchSection('add-member')">add member</button>
+    <button class="nav-btn" onclick="switchSection('record-payment')">record payment</button>
+    <button class="nav-btn" onclick="switchSection('today-payments')">today's collection</button>
+    <button class="nav-btn" onclick="switchSection('monthly-payments')">monthly</button>
+  </div>
+
+  <div class="main">
+
+
+    <div class="section active" id="members-list">
+      <div class="section-title">all members</div>
+      <div class="card">
+        <div id="members-table-wrap">
+          <div class="empty-state">loading members...</div>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="section" id="add-member">
+      <div class="section-title">add member</div>
+      <div class="card">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Registration Number</label>
+            <input type="number" id="m-reg" placeholder="1001" />
+          </div>
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="m-name" placeholder="Rahul Sharma" />
+          </div>
+          <div class="form-group">
+            <label>Phone</label>
+            <input type="text" id="m-phone" placeholder="9800000001" />
+          </div>
+          <div class="form-group">
+            <label>Monthly Fee (₹)</label>
+            <input type="number" id="m-fee" placeholder="1800" />
+          </div>
+        </div>
+        <button class="inline-btn" onclick="handleAddMember()">add member</button>
+        <p class="success-msg" id="add-member-msg"></p>
+      </div>
+    </div>
+
+
+    <div class="section" id="record-payment">
+      <div class="section-title">record payment</div>
+      <div class="card">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Member</label>
+            <select id="p-member">
+              <option value="">select member</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Amount (₹)</label>
+            <input type="number" id="p-amount" placeholder="1800" />
+          </div>
+          <div class="form-group">
+            <label>Month (YYYY-MM)</label>
+            <input type="text" id="p-month" placeholder="2026-07" />
+          </div>
+          <div class="form-group">
+            <label>Mode</label>
+            <select id="p-mode">
+              <option value="cash">cash</option>
+              <option value="upi">upi</option>
+            </select>
+          </div>
+        </div>
+        <button class="inline-btn" onclick="handleRecordPayment()">record payment</button>
+        <p class="success-msg" id="record-payment-msg"></p>
+      </div>
+    </div>
+
+
+    <div class="section" id="today-payments">
+      <div class="section-title">today's collection</div>
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">total</div>
+          <div class="stat-value" id="stat-total">₹0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">cash</div>
+          <div class="stat-value" id="stat-cash">₹0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">upi</div>
+          <div class="stat-value" id="stat-upi">₹0</div>
+        </div>
+      </div>
+      <div class="card">
+        <div id="today-payments-list">
+          <div class="empty-state">loading...</div>
+        </div>
+      </div>
+    </div>
+
+
+    <div class="section" id="monthly-payments">
+      <div class="section-title">monthly payments</div>
+      <div class="card">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Month (YYYY-MM)</label>
+            <input type="text" id="filter-month" placeholder="2026-07" />
+          </div>
+          <div style="display:flex; align-items:flex-end;">
+            <button class="inline-btn" onclick="loadMonthlyPayments()">search</button>
+          </div>
+        </div>
+        <div id="monthly-payments-list" style="margin-top:16px">
+          <div class="empty-state">enter a month to search</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const BASE = "http://localhost:3000"
+
+  function getToken() {
+    return localStorage.getItem("token")
+  }
+
+  function authHeaders() {
+    return { "Content-Type": "application/json", "token": getToken() }
+  }
+
+
+
+  function switchTab(tab) {
+    document.getElementById("signin-form").style.display = tab === "signin" ? "block" : "none"
+    document.getElementById("signup-form").style.display = tab === "signup" ? "block" : "none"
+    document.querySelectorAll(".tab-btn").forEach((b, i) => {
+      b.classList.toggle("active", (i === 0 && tab === "signin") || (i === 1 && tab === "signup"))
+    })
+  }
+
+  async function handleSignin() {
+    const email = document.getElementById("signin-email").value
+    const password = document.getElementById("signin-password").value
+    try {
+      const res = await fetch(`${BASE}/admin/signin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      })
+      const data = await res.json()
+      if (data.token) {
+        localStorage.setItem("token", data.token)
+        showApp()
+      } else {
+        document.getElementById("signin-error").textContent = data.message || "invalid credentials"
+      }
+    } catch (e) {
+      document.getElementById("signin-error").textContent = "something went wrong"
+    }
+  }
+
+  async function handleSignup() {
+    const email = document.getElementById("signup-email").value
+    const password = document.getElementById("signup-password").value
+    const business_name = document.getElementById("signup-bname").value
+    try {
+      const res = await fetch(`${BASE}/admin/signup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, business_name })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        document.getElementById("signup-error").style.color = "var(--accent)"
+        document.getElementById("signup-error").textContent = "account created — sign in now"
+        switchTab("signin")
+      } else {
+        document.getElementById("signup-error").textContent = data.message || "signup failed"
+      }
+    } catch (e) {
+      document.getElementById("signup-error").textContent = "something went wrong"
+    }
+  }
+
+  function handleLogout() {
+    localStorage.removeItem("token")
+    document.getElementById("app-screen").style.display = "none"
+    document.getElementById("auth-screen").style.display = "flex"
+  }
+
+
+
+  function showApp() {
+    document.getElementById("auth-screen").style.display = "none"
+    document.getElementById("app-screen").style.display = "block"
+    loadMembers()
+    loadTodayPayments()
+  }
+
+  function switchSection(id) {
+    document.querySelectorAll(".section").forEach(s => s.classList.remove("active"))
+    document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"))
+    document.getElementById(id).classList.add("active")
+    event.target.classList.add("active")
+
+    if (id === "members-list") loadMembers()
+    if (id === "today-payments") loadTodayPayments()
+    if (id === "record-payment") populateMemberDropdown()
+  }
+
+
+
+  async function loadMembers() {
+    try {
+      const res = await fetch(`${BASE}/members`, { headers: authHeaders() })
+      const data = await res.json()
+      const members = data.members || []
+      const wrap = document.getElementById("members-table-wrap")
+
+      if (members.length === 0) {
+        wrap.innerHTML = `<div class="empty-state">no members yet — add one</div>`
+        return
+      }
+
+      wrap.innerHTML = `
+        <table class="members-table">
+          <thead>
+            <tr>
+              <th>reg no</th>
+              <th>name</th>
+              <th>phone</th>
+              <th>monthly fee</th>
+              <th>status</th>
+              <th>joined</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${members.map(m => `
+              <tr>
+                <td>#${m.registration_number}</td>
+                <td>${m.name}</td>
+                <td>${m.phone}</td>
+                <td>₹${m.monthly_fee}</td>
+                <td><span class="badge">${m.status}</span></td>
+                <td>${new Date(m.joining_date).toLocaleDateString('en-IN')}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `
+    } catch (e) {
+      document.getElementById("members-table-wrap").innerHTML = `<div class="empty-state">failed to load members</div>`
+    }
+  }
+
+  async function handleAddMember() {
+    const reg = document.getElementById("m-reg").value
+    const name = document.getElementById("m-name").value
+    const phone = document.getElementById("m-phone").value
+    const fee = document.getElementById("m-fee").value
+    const msg = document.getElementById("add-member-msg")
+
+    try {
+      const res = await fetch(`${BASE}/members`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({
+          registration_number: Number(reg),
+          name,
+          phone,
+          monthly_fee: Number(fee),
+          status: "active"
+        })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        msg.textContent = `✓ ${name} added successfully`
+        document.getElementById("m-reg").value = ""
+        document.getElementById("m-name").value = ""
+        document.getElementById("m-phone").value = ""
+        document.getElementById("m-fee").value = ""
+      } else {
+        msg.style.color = "var(--danger)"
+        msg.textContent = data.message || "failed to add member"
+      }
+    } catch (e) {
+      msg.style.color = "var(--danger)"
+      msg.textContent = "something went wrong"
+    }
+  }
+
+
+
+  async function populateMemberDropdown() {
+    const res = await fetch(`${BASE}/members`, { headers: authHeaders() })
+    const data = await res.json()
+    const select = document.getElementById("p-member")
+    select.innerHTML = `<option value="">select member</option>`
+    data.members.forEach(m => {
+      select.innerHTML += `<option value="${m._id}">#${m.registration_number} — ${m.name}</option>`
+    })
+  }
+
+  async function handleRecordPayment() {
+    const member_id = document.getElementById("p-member").value
+    const amount = document.getElementById("p-amount").value
+    const month = document.getElementById("p-month").value
+    const mode = document.getElementById("p-mode").value
+    const msg = document.getElementById("record-payment-msg")
+
+    try {
+      const res = await fetch(`${BASE}/payments`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ member_id, amount: Number(amount), month, mode })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        msg.textContent = `✓ payment of ₹${amount} recorded for ${month}`
+        document.getElementById("p-amount").value = ""
+        document.getElementById("p-month").value = ""
+      } else {
+        msg.style.color = "var(--danger)"
+        msg.textContent = data.message || "failed to record payment"
+      }
+    } catch (e) {
+      msg.style.color = "var(--danger)"
+      msg.textContent = "something went wrong"
+    }
+  }
+
+  async function loadTodayPayments() {
+    try {
+      const res = await fetch(`${BASE}/payments`, { headers: authHeaders() })
+      const data = await res.json()
+
+      document.getElementById("stat-total").textContent = `₹${data.total || 0}`
+      document.getElementById("stat-cash").textContent = `₹${data.cash || 0}`
+      document.getElementById("stat-upi").textContent = `₹${data.upi || 0}`
+
+      const list = document.getElementById("today-payments-list")
+      if (!data.payments || data.payments.length === 0) {
+        list.innerHTML = `<div class="empty-state">no payments recorded today</div>`
+        return
+      }
+
+      list.innerHTML = data.payments.map(p => `
+        <div class="payment-item">
+          <div>
+            <div class="payment-name">member id: ${p.member_id}</div>
+            <div class="payment-meta">${p.month} <span class="mode-tag">${p.mode}</span></div>
+          </div>
+          <div class="payment-amount">₹${p.amount}</div>
+        </div>
+      `).join("")
+    } catch (e) {
+      document.getElementById("today-payments-list").innerHTML = `<div class="empty-state">failed to load</div>`
+    }
+  }
+
+  async function loadMonthlyPayments() {
+    const month = document.getElementById("filter-month").value
+    if (!month) return
+    try {
+      const res = await fetch(`${BASE}/payments/month/${month}`, { headers: authHeaders() })
+      const data = await res.json()
+      const list = document.getElementById("monthly-payments-list")
+
+      if (!data.payments || data.payments.length === 0) {
+        list.innerHTML = `<div class="empty-state">no payments found for ${month}</div>`
+        return
+      }
+
+      const total = data.payments.reduce((s, p) => s + p.amount, 0)
+      list.innerHTML = `
+        <div style="margin-bottom:16px; font-size:13px; color:var(--muted)">
+          ${data.payments.length} payments · total <span style="color:var(--accent); font-weight:700">₹${total}</span>
+        </div>
+        ${data.payments.map(p => `
+          <div class="payment-item">
+            <div>
+              <div class="payment-name">member id: ${p.member_id}</div>
+              <div class="payment-meta">${new Date(p.paid_on).toLocaleDateString('en-IN')} <span class="mode-tag">${p.mode}</span></div>
+            </div>
+            <div class="payment-amount">₹${p.amount}</div>
+          </div>
+        `).join("")}
+      `
+    } catch (e) {
+      document.getElementById("monthly-payments-list").innerHTML = `<div class="empty-state">something went wrong</div>`
+    }
+  }
+
+
+  if (getToken()) showApp()
+</script>
+</body>
+</html>

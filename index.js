@@ -6,6 +6,8 @@ const {membersRouter}=require("./routes/members")
 const { paymentsRouter } = require("./routes/payments")
 
 const app=express()
+const cors = require("cors")
+app.use(cors())  
 app.use(express.json())
 app.use("/admin",adminRouter)
 app.use("/members",membersRouter)
